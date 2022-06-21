@@ -1,16 +1,14 @@
 # JPQL Basic traning
 - 김영한 - 자바 ORM 표준 JPA 프로그래밍
 
----
 
 ## 목표
 - JPQL 사용법 습득
 
----
 
 ## 목차
 
----
+
 1. [JPQL 기초문법](#1.-JPQL-기초-문법)
 2. [JPQL Query 종류](#2.-JPQL-Query-종류)
 3. [Query 결과 조회 방법](#3.-Query-결과-조회-방법)
@@ -20,7 +18,6 @@
 
 ### 1. JPQL 기초 문법
 
----
 - 기존 SQL의 ```FROM```에 들어가는 테이블에서 **엔티티 이름**을 사용한다. (테이블 이름이나 클래스 이름이 아니므로 주의)
 ```java
 @Entity(name = "MMMMMM")  // 해당 name을 사용한다.
@@ -38,7 +35,7 @@ SELECT m FROM MMMMMM as m WHERE m.age > 18
 
 ### 2. JPQL Query 종류
 
----
+
 
 #### 2.1. TypedQuery
 - 쿼리로 반환되는 타입이 명확할 경우에 사용한다.
@@ -76,7 +73,7 @@ em.createQuery("SELECT m FROM Member m WHERE m.name = ?1", Member.class)
 
 ### 3. Query 결과 조회 방법
 
----
+
 
 #### 3.1. 다수의 객체 조회
 - ```query.getResultList()```를 사용한다.
@@ -119,7 +116,7 @@ catch(NonUniqueResultException e)
 
 ### 4. 프로젝션
 
----
+
 
 #### 4.1. 엔티티 프로젝션 1
 ```jpaql
@@ -187,7 +184,7 @@ SELECT NEW com.roman14.entity.ResultDTO( m.name, m.age ) FROM Member m
 
 ### 5. 페이징 API
 
----
+
 
 - JPA는 추상 API로 페이징을 제공한다.
 - 두 메소드를 통해서 편리하게 페이징이 가능하다. (```setFirstResult()``` ```setMaxResult()```)
@@ -201,7 +198,7 @@ em.createQuery("SELECT m FROM Member m ORDER BY m.age ASC", Member.class)
 
 ### 6. 조인
 
----
+
 
 #### 6.1. 내부 조인
 - INNER JOIN
