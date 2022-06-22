@@ -139,7 +139,7 @@ public class Member {
 ```
 ```jpaql
 SELECT m.team FROM Member m;        // 묵시적 조인
-SELECT t FROM Member m join m.team; // 명시적 조인
+SELECT t FROM Member m join m.team t; // 명시적 조인
 ```
 #### 4.3. 임베디드 타입 프로젝션
 ```java
@@ -198,9 +198,6 @@ em.createQuery("SELECT m FROM Member m ORDER BY m.age ASC", Member.class)
 <br>
 
 ### 6. 조인
-
-
-
 #### 6.1. 내부 조인
 - INNER JOIN
 - A (AB) B
@@ -375,4 +372,14 @@ public class CustomOracleDialect extends Oracle12cDialect {
 SELECT FUNCTION('fn_get_custom_stockAmount', p.stockAmount) FROM Product p
 ```
 ```jpaql 
+```
+
+### 11. 경로 표현식
+- 상태 필드(state field) : 단순 값을 저장하기 위한 필드
+- 연관 필드(association field) : 엔티티 혹은 엔티티 컬렉션 연관관계를 위한 필드
+```jpaql
+SELECT m.name   /* 상태 필드(값)  */
+,      m.team   /* 연관 필드(엔티티) @ManyToOne, @OneToOne  */
+,      m.orders /* 연관 필드(엔티티 컬랙션) @OneToMany, @ManyToMany  */
+FROM Member m
 ```
