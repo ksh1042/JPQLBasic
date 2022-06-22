@@ -15,6 +15,7 @@
 4. [프로젝션](#4.-프로젝션)
 5. [페이징 API](#5.-페이징-API)
 6. [조인](#6.-조인)
+7. [서브쿼리와 JPQL 서브쿼리의 한계](#7.-서브쿼리와-JPQL-서브쿼리의-한계)
 
 ### 1. JPQL 기초 문법
 
@@ -242,4 +243,136 @@ ANd t.name = 'back-end 01'
 - 별도로 연관관계를 지정하지 않은 엔티티, 별도의 필드로 외부조인이 가능하다. (Hibernate 5.1 ↑)
 ```jpaql
 SELECT m FROM Member m LEFT JOIN m.team t ON m.name = t.name
+```
+
+### 7. 서브쿼리와 JPQL 서브쿼리의 한계
+- JPA 표준스펙에서의 서브쿼리는 WHERE, HAVING 에서만 사용이 가능하다.
+- ※Hibernate 구현체에서는 예외적으로 SELECT 구간에 서브쿼리를 생성할 수 있도록 지원해준다.
+#### 7.1. exist, ALL, ANY, SOME
+- exist
+```jpaql
+/* 'Front-End 01' 팀 이름을 가진 소속의 멤버들  */
+SELECT m FROM Member m WHERE m.team = EXISTS(
+    SELECT t FROM Team t WHERE t.name = 'Front-End 01' 
+) 
+```
+- ALL
+```jpaql
+/* 전체 상품 중 재고보다 주문 수량이 더 많은 주문들 */
+SELECT o FROM Orders o WHERE o.orderAmount > ALL(
+    SELECT p.stockAmount FROM Product p
+)  
+```
+- ANY, SOME
+```jpaql
+/* 소속된 팀이 있는 멤버 */
+SELECT m FROM Member m WHERE m.team = SOME(
+    SELECT t FROM Team t
+)```
+#### 7.2. FROM 구간의 서브쿼리가 필요한 경우
+>- 쿼리를 두 번으로 쪼개서 실행한다.
+>- 서브쿼리에 필요한 동작을 애플리케이션으로 가져와서 처리 한다.
+>- JPQL이 아닌 네이티브 쿼리를 사용한다.
+
+### 8. JPQL 타입 표현
+- 대부분 표준 ANSI SQL과 비슷하다.
+#### 8.1. 숫자 타입
+- 10L(Long), 20.22D(Double), 10.5F(Float)
+#### 8.2. Enum 타입
+- 사용 시 패키지 경로를 반드시 포함하여야 한다.
+```java
+package com.roman14.jpqlbasic.entity;
+
+public enum City {
+  SEOUL, DAEGEON, DAEGU, BUSAN;
+}
+
+@Entity
+public class Member  {
+  @Enumerated(EnumType.STRING)
+  private City city;
+}
+```
+```jpaql
+SELECT m From Member m WHERE m.city = com.roman14.jpqlbasic.entity.City.SEOUL
+```
+- 보통은 위처럼 번거롭게 패키지명을 전부 기술하지 않고, 파라미터 바인딩을 통해 처리하는 방법도 있다.
+#### 8.4. 타입 캐스팅 비교
+- 상속관계에 있는 엔티티를 비교할때에 사용한다.
+- ```@Discrimination``` 어노테이션을 통해 상속관계의 구분자가 있는 경우에만 사용 가능하다.
+- ```WHERE TYPE(Entity_alias) = Entity```
+```java
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@Discrimination
+public class Product {}
+
+@Entity
+@DiscriminationValue("G")
+public class Guitar extends Product  {}
+```
+```jpaql
+/* 타입이 Guitar인 상품만 조회 */
+SELECT p FROM Product p WHERE TYPE(p) = Guitar 
+```
+
+### 9. CASE
+#### 9.1. 일반 CASE
+```jpaql
+SELECT 
+    CASE WHEN m.age <= 19 THEN '청소년'
+    CASE WHEN m.age >= 65 THEN '노인'
+         ELSE '성인' 
+    END 
+FROM Member m
+```
+#### 9.2. 단순 CASE
+```jpaql
+SELECT 
+    CASE p.dtype
+        WHEN 'G' THEN '기타'
+        WHEN 'P' THEN '피아노'
+        ELSE 'NAN'
+    END 
+FROM Product p
+```
+#### 9.3. COALESCE
+- 오라클의 NVL과 같이 NULL일 경우에 대체값을 지정할 수 있다. NULL이 아닌 경우엔 그냥 값을 반환한다.
+```jpaql
+/* 사용자 이름이 NULL일 경우 '관리자' 를 반환하고, 그 외의 경우엔 그냥 값을 반환 */
+SELECT COALESCE(m.name, '관리자') FROM Member m
+```
+#### 9.4. NULLIF
+- 두 인자 값이 일치할 경우 NULL을 반환하고, 그 외의 경우엔 그냥 값을 반환한다.
+```jpaql
+/* 44세는 NULL 값으로 반환되며, 그 외에는 자신의 값을 반환 */
+SELECT NULLIF(m.age, 44) FROM Member m
+```
+
+### 10. 함수
+#### 10.1 기본 함수
+- JPQL에서 기본적으로 지원하는 함수들로 해당 함수들은 데이터베이스 Dialect와 상관없이 사용이 가능하다.
+- ```CONCAT```, ```SUBSTRING```, ```TRIM```, ```LOWER```, ```UPPER```, ```LENGTH```, ```LOCATE```, ```ABS```, ```SQRT```, ```MOD```, ```SIZE```, ```INDEX```
+> ```size``` : 컬렉션의 사이즈 값을 구하하는 함수
+> ```jpaql
+> /* 팀에 소속된 멤버 수 */
+> SELECT SIZE(t.members) FROM Team t
+> ```
+#### 10.2. 사용자 정의 함수
+- 데이터베이스 Dialect를 지정하면 기본적으로 Hibernate에서 지원하는 Diarect의 경우 함수들이 대부분 등록되어 있다.
+- 사용자가 직접 정의한 데이터베이스의 함수는 다음과 같은 과정을 거쳐 사용할 수 있다.
+1. 데이터베이스 Dialet를 상속 받는다.
+2. 상속받은 클래스의 생성자에 ```registerFunction()``` 함수를 통해 사용자 정의 함수를 등록한다.
+```java
+public class CustomOracleDialect extends Oracle12cDialect {
+  public CustomOracleDialect() {
+    // 두 번째 인자의 생성자는 외우고 사용하기는 어려우니 직접 슈퍼클래스의 코드를 조회해서 비슷한 기능의 사례를 참고해서 사용하는 편이 좋다. 
+    this.registerFunction("fn_get_custom_stockAmount", new StandardSQLFunction("fn_get_custom_stockAmount", StandardBasicTypes.STRING));
+  }
+}
+```
+```jpaql
+SELECT FUNCTION('fn_get_custom_stockAmount', p.stockAmount) FROM Product p
+```
+```jpaql 
 ```

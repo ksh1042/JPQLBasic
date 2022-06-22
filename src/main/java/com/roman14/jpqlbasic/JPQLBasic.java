@@ -38,6 +38,7 @@ public class JPQLBasic
 
   public Optional<Member> findMember(Long id)
   {
+    em.getTransaction().begin();
     Optional<Member> result = Optional.empty();
 
     try
@@ -51,7 +52,17 @@ public class JPQLBasic
       throw e;
     }
 
+    em.getTransaction().commit();
     return result;
+  }
+
+  public void test()
+  {
+    em.getTransaction().begin();
+
+    em.createQuery("SELECT group_concat(m.name) as con FROM Member m");
+
+    em.getTransaction().commit();
   }
 
   public void close()
