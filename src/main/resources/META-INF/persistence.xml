@@ -15,7 +15,8 @@
       <property name="javax.persistence.jdbc.password" value=""/>
 
       <!--  Options    -->
-      <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+      <!--<property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>-->
+      <property name="hibernate.dialect" value="com.roman14.jpqlbasic.db.dialect.CustomH2Dialect"/>
       <property name="hibernate.show_sql" value="true"/>
       <property name="hibernate.format_sql" value="true"/>
       <!--   Persistence Context lazy write buffer size   -->

@@ -383,3 +383,18 @@ SELECT m.name   /* 상태 필드(값)  */
 ,      m.orders /* 연관 필드(엔티티 컬랙션) @OneToMany, @ManyToMany  */
 FROM Member m
 ```
+- 연관 필드 조회 시 암묵적인 ```JOIN```이 발생하여 성능저하를 일으킬 수 있다.
+- 가급적 암묵적 ```JOIN```이 아닌 명시적 ```JOIN```으로 표현하여야 유지보수에 추가적인 어려움을 겪지 않을수 있다.
+
+### 12. Fetch 
+- 기존의 JPQL로 JOIN 작성 시 쿼리가 여러번 날아가는 ```N+1``` 문제가 발생
+- 쪼개서 가져오는 것이 아닌 한 번에 가져올 것을 명시하는 방법 
+```jpaql
+/* 실행한 JPQL */
+SELECT m FROM Member m LEFT OUTER JOIN FETCH m.team
+```
+```sql
+/* 완성된 쿼리 */
+SELECT m.*, t.*
+FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
+```

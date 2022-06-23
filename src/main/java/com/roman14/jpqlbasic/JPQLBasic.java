@@ -5,6 +5,7 @@ import com.roman14.jpqlbasic.entity.Member;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+import java.util.List;
 import java.util.Optional;
 
 public class JPQLBasic
@@ -18,13 +19,13 @@ public class JPQLBasic
     this.em = this.emf.createEntityManager();
   }
 
-  public void addMember(Member member)
+  public <T> void add(T t)
   {
     em.getTransaction().begin();
 
     try
     {
-      em.persist(member);
+      em.persist(t);
     }
     catch(Exception e)
     {
@@ -59,9 +60,11 @@ public class JPQLBasic
   public void test()
   {
     em.getTransaction().begin();
-
-    em.createQuery("SELECT group_concat(m.name) as con FROM Member m");
-
+    List<String> strs = em.createQuery("SELECT group_concat(m.name) FROM Member m").getResultList();
+    for(String str : strs)
+    {
+      System.out.println("str = " + str);
+    }
     em.getTransaction().commit();
   }
 
