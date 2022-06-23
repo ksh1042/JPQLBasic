@@ -5,6 +5,7 @@ import com.roman14.jpqlbasic.entity.embedded.Address;
 import javax.persistence.*;
 
 @Entity
+@Table(name = "Orders")
 public class Order
 {
   @Id @GeneratedValue
