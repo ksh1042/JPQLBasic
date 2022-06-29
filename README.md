@@ -16,6 +16,11 @@
 5. [페이징 API](#5-페이징-API)
 6. [조인](#6-조인)
 7. [서브쿼리와 JPQL 서브쿼리의 한계](#7-서브쿼리와-JPQL-서브쿼리의-한계)
+8. [타입 캐스팅 비교](#8-타입-캐스팅-비교)
+9. [CASE와 NULL 조회](#9-CASE와-NULL-조회)
+10. [함수](#10-함수)
+11. [경로 표현식](#11-경로-표현식)
+12. [Fetch](#12-Fetch)
 
 ### 1. JPQL 기초 문법
 
@@ -294,7 +299,7 @@ public class Member  {
 SELECT m From Member m WHERE m.city = com.roman14.jpqlbasic.entity.City.SEOUL
 ```
 - 보통은 위처럼 번거롭게 패키지명을 전부 기술하지 않고, 파라미터 바인딩을 통해 처리하는 방법도 있다.
-#### 8.4. 타입 캐스팅 비교
+### 8. 타입 캐스팅 비교
 - 상속관계에 있는 엔티티를 비교할때에 사용한다.
 - ```@Discrimination``` 어노테이션을 통해 상속관계의 구분자가 있는 경우에만 사용 가능하다.
 - ```WHERE TYPE(Entity_alias) = Entity```
@@ -313,7 +318,7 @@ public class Guitar extends Product  {}
 SELECT p FROM Product p WHERE TYPE(p) = Guitar 
 ```
 
-### 9. CASE
+### 9. CASE와 NULL 조회
 #### 9.1. 일반 CASE
 ```jpaql
 SELECT 
