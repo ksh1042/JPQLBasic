@@ -57,15 +57,17 @@ public class JPQLBasic
     return result;
   }
 
-  public void test()
+  public <T> List<T> clearAndQuery(String query, Class<T> clazz)
   {
     em.getTransaction().begin();
-    List<String> strs = em.createQuery("SELECT group_concat(m.name) FROM Member m").getResultList();
-    for(String str : strs)
-    {
-      System.out.println("str = " + str);
-    }
+
+    em.clear();
+
+    List<T> result = em.createQuery(query, clazz).getResultList();
+
     em.getTransaction().commit();
+
+    return result;
   }
 
   public void close()

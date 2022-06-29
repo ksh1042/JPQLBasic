@@ -14,7 +14,7 @@ public class Member
 
   private int age;
 
-  @ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne
   @JoinColumn(name = "team_id")
   private Team team;
 

@@ -388,13 +388,13 @@ FROM Member m
 
 ### 12. Fetch 
 - 기존의 JPQL로 JOIN 작성 시 쿼리가 여러번 날아가는 ```N+1``` 문제가 발생
-- 쪼개서 가져오는 것이 아닌 한 번에 가져올 것을 명시하는 방법 
+- 쪼개서 가져오는 것이 아닌 동시에 즉, 한 번에 가져올 것을 명시하는 방법 
 ```jpaql
 /* 실행한 JPQL */
 SELECT m FROM Member m LEFT OUTER JOIN FETCH m.team
 ```
 ```sql
-/* 완성된 쿼리 */
+/* 예상 SQL 실행 쿼리 */
 SELECT m.*, t.*
 FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 ```

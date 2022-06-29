@@ -1,4 +1,5 @@
-import com.roman14.jpqlbasic.JPQLBasic;
+package com.roman14.jpqlbasic;
+
 import com.roman14.jpqlbasic.entity.Member;
 import com.roman14.jpqlbasic.entity.Product;
 import com.roman14.jpqlbasic.entity.Team;
@@ -63,13 +64,21 @@ class JPQLBasicTest
 
     Assertions.assertTrue(member.equals(findMember.get()));
   }
-  @Test
-  void test()
-  {
-    setTestMembers(200);
-    setTestProduct();
 
-    subject.test();
+  @Test
+  void testClearAndQuery()
+  {
+    setTestMembers(20);
+
+//    final String query = "SELECT m FROM Member m JOIN FETCH m.team t WHERE t.name = 'Front-End 01'";
+    final String query = "SELECT m FROM Member m JOIN FETCH m.team t";
+    final List<Member> members = subject.clearAndQuery(query, Member.class);
+
+    for(Member m : members)
+    {
+      System.out.println("m.getTeam().getClass() = " + m.getTeam().getClass());
+      System.out.println("m.getTeam().getName() = " + m.getTeam().getName());
+    }
   }
 
   @AfterEach
