@@ -71,14 +71,22 @@ class JPQLBasicTest
     setTestMembers(20);
 
 //    final String query = "SELECT m FROM Member m JOIN FETCH m.team t WHERE t.name = 'Front-End 01'";
-    final String query = "SELECT m FROM Member m JOIN FETCH m.team t";
-    final List<Member> members = subject.clearAndQuery(query, Member.class);
+//    final String query = "SELECT m FROM Member m";
+//    final List<Member> members = subject.clearAndQuery(query, Member.class);
 
-    for(Member m : members)
+    final String query = "SELECT DISTINCT t FROM Team t JOIN FETCH t.members m";
+    final List<Team> teams = subject.clearAndQuery(query, Team.class);
+    
+    for(Team t : teams)
     {
-      System.out.println("m.getTeam().getClass() = " + m.getTeam().getClass());
-      System.out.println("m.getTeam().getName() = " + m.getTeam().getName());
+      System.out.println("t.getName() = " + t.getName() + '|' + t.getMembers().size());
     }
+
+//    for(Member m : members)
+//    {
+//      System.out.println("m.getTeam().getClass() = " + m.getTeam().getClass());
+//      System.out.println("m.getTeam().getName() = " + m.getTeam().getName());
+//    }
   }
 
   @AfterEach
@@ -105,7 +113,7 @@ class JPQLBasicTest
       final Member member = new Member();
       member.setName( getPersonName() );
       member.setAge( sr.nextInt(18) + 10 );
-      member.setTeam(teams.get( sr.nextInt(5) ));
+      member.setTeam(teams.get( sr.nextInt(teamNames.length) ));
       subject.add(member);
     }
   }

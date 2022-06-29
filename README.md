@@ -387,34 +387,58 @@ FROM Member m
 - 가급적 암묵적 ```JOIN```이 아닌 명시적 ```JOIN```으로 표현하여야 유지보수에 추가적인 어려움을 겪지 않을수 있다.
 
 ### 12. Fetch 
-- 기존의 JPQL로 JOIN 작성 시 쿼리가 여러번 날아가는 ```N+1``` 문제가 발생
-- 쪼개서 가져오는 것이 아닌 동시에 즉, 한 번에 가져올 것을 명시하는 방법 
+- ```N+1 문제```
+> - ```FETCH JOIN``` 없이 조인하여 조회하게 될 경우 최약의 경우, 조인해야 될 대상의 N개 만큼 조회 쿼리가 추가적으로 발생할 수 있다.
+>
+>```java
+>Team t1 = new Team("t1");
+>Team t2 = new Team("t2");
+>
+>Member m1 = new Member(t1)
+>Member m2 = new Member(t1);
+>Member m3 = new Member(t2);
+>
+>...
+>
+>List<Member> members = em.createQueryt("SELECT m FROM Member m", Member.class).getResultList();
+>
+>for(Member m : members)
+>{
+>  // m2의 경우는 이미 앞서 m1에서 조회되어 영속성 컨텍스트에 존재하는 팀을 사용하므로, 팀1와 팀2 총 두번의 조회 쿼리가 발생한다. 
+>  m.getTeam().getName();
+>}
+>```
+>- 즉, 처음 조회해오는 ```select m FROM Member m``` 전체 멤버 쿼리 한 번과, 그 뒤에 조회될 ```select t from team where t.id=?``` 팀 N개의 갯수만큼 조회. ```N+1```문제가 발생하는 것이다.
+- JPQL에서의 ```FETCH JOIN```이란 쪼개서 가져오는 것이 아닌 동시에 즉, 한 번에 가져올 것을 명시하는 방법
 ```jpaql
 /* 실행한 JPQL */
-SELECT m FROM Member m LEFT OUTER JOIN FETCH m.team
+SELECT m FROM Member m JOIN FETCH m.team t
 ```
 ```sql
 /* 예상 SQL 실행 쿼리 */
 SELECT m.*, t.*
 FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 ```
-- ```FetchType.LAZY``` 혹은 ```FETCH JOIN``` 없이 조인하여 조회하게 될 경우 최약의 경우, 조인해야 될 대상의 N개 만큼 조회 쿼리가 추가적으로 발생할 수 있다.
-
-```java
-Team t1 = new Team("t1");
-Team t2 = new Team("t2");
-
-Member m1 = new Member(t1)
-Member m2 = new Member(t1);
-Member m3 = new Member(t2);
-
-...
-
-List<Member> members = em.createQueryt("SELECT m FROM Member m", Member.class).getResultList();
-
-for(Member m : members)
-{
-  // m2의 경우는 이미 앞서 m1에서 조회되어 영속성 컨텍스트에 존재하는 팀을 사용하므로, 팀1와 팀2 총 두번의 조회 쿼리가 발생한다. 
-  m.getTeam().getName();
-}
-```
+- ```FETCH JOIN```을 통해 조회된 내부 엔티티는 프록시 엔티티가 아닌 실제 엔티티가 영속성 컨텍스트에 담기게 된다.
+- ```@ManyToOne(fetch = FetchType.LAZY``` 보다 우선순위로 실행된다.
+- ```@OneToMany```의 경우 즉, 컬렉션 패치 조인에는 데이터가 중복조회되는 현상이 발생한다.
+> ```jpaql
+> SELECT t FROM Team t JOIN FETCH t.members m
+> ```
+> ```sql
+> /* 오라클의 해당 SQL와 같은 방식으로 실행된다 */
+> SELECT * FROM Member m, Team t
+> ```
+> ```
+> /* 아래와 같이 조회된다 */
+> row1 = | team 1 | member 1 |
+> row2 = | team 1 | member 2 |
+> row3 = | team 2 | member 3 |
+> row4 = | team 2 | member 4 |
+> row5 = | team 2 | member 5 |
+>```
+>- JPQL에 ```DISTINCT```를 추가하여 중복을 제거 가능하다.
+> ```jpaql
+>   SELECT DISTINCT t FROM TEAM t JOIN t.members m
+> ```
+>- JPQL의 ```DISTINCT```는 일반적인 SQL의 ```DISTINCT```명령도 수행하며, 추가적으로 애플리케이션 내에서 중복의 결과를 제거해주는 두 가지 역할을 수행한다.
