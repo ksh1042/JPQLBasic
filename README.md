@@ -398,3 +398,23 @@ SELECT m FROM Member m LEFT OUTER JOIN FETCH m.team
 SELECT m.*, t.*
 FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 ```
+- ```FetchType.LAZY``` 혹은 ```FETCH JOIN``` 없이 조인하여 조회하게 될 경우 최약의 경우, 조인해야 될 대상의 N개 만큼 조회 쿼리가 추가적으로 발생할 수 있다.
+
+```java
+Team t1 = new Team("t1");
+Team t2 = new Team("t2");
+
+Member m1 = new Member(t1)
+Member m2 = new Member(t1);
+Member m3 = new Member(t2);
+
+...
+
+List<Member> members = em.createQueryt("SELECT m FROM Member m", Member.class).getResultList();
+
+for(Member m : members)
+{
+  // m2의 경우는 이미 앞서 m1에서 조회되어 영속성 컨텍스트에 존재하는 팀을 사용하므로, 팀1와 팀2 총 두번의 조회 쿼리가 발생한다. 
+  m.getTeam().getName();
+}
+```
