@@ -33,9 +33,12 @@ public class Member
   ...
 }
 ```
-- 별칭은 반드시 사용해야 한다. ( ```MMMMMM as m``` )
+- 별칭은 반드시 사용해야 한다. ( ```MMMMMM as m``` or ```MMMMMM m``` )
 ```jpaql
 SELECT m FROM MMMMMM as m WHERE m.age > 18
+```
+```jpaql
+SELECT m FROM MMMMMM m WHERE m.age > 18
 ```
 <br>
 
@@ -59,7 +62,7 @@ em.createQuery("SELECT m.name FROM Member m", String.class);
 em.createQuery("SELECT m.age FROM Member m", Integer.class);
 
 // 정체 모를 타입을 반환할 경우 (Query)
-em.createQuery("SELECT m.name, m.age FROM Member m", String.class);
+em.createQuery("SELECT m.name, m.age FROM Member m");
 ```
 
 #### 2.3. 파라미터 바인딩
@@ -392,7 +395,8 @@ FROM Member m
 - 가급적 암묵적 ```JOIN```이 아닌 명시적 ```JOIN```으로 표현하여야 유지보수에 추가적인 어려움을 겪지 않을수 있다.
 
 ### 12. Fetch 
-- ```N+1 문제```
+
+#### 12.1.```N+1 문제```
 > - ```FETCH JOIN``` 없이 조인하여 조회하게 될 경우 최약의 경우, 조인해야 될 대상의 N개 만큼 조회 쿼리가 추가적으로 발생할 수 있다.
 >
 >```java
@@ -414,6 +418,7 @@ FROM Member m
 >}
 >```
 >- 즉, 처음 조회해오는 ```select m FROM Member m``` 전체 멤버 쿼리 한 번과, 그 뒤에 조회될 ```select t from team where t.id=?``` 팀 N개의 갯수만큼 조회. ```N+1```문제가 발생하는 것이다.
+#### 12.2. Fetch Join
 - JPQL에서의 ```FETCH JOIN```이란 쪼개서 가져오는 것이 아닌 동시에 즉, 한 번에 가져올 것을 명시하는 방법
 ```jpaql
 /* 실행한 JPQL */
@@ -426,6 +431,7 @@ FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 ```
 - ```FETCH JOIN```을 통해 조회된 내부 엔티티는 프록시 엔티티가 아닌 실제 엔티티가 영속성 컨텍스트에 담기게 된다.
 - ```@ManyToOne(fetch = FetchType.LAZY``` 보다 우선순위로 실행된다.
+#### 12.3. 1:N 조회 데이터 중복 문제 
 - ```@OneToMany```의 경우 즉, 컬렉션 패치 조인에는 데이터가 중복조회되는 현상이 발생한다.
 > ```jpaql
 > SELECT t FROM Team t JOIN FETCH t.members m
@@ -447,3 +453,7 @@ FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 >   SELECT DISTINCT t FROM TEAM t JOIN t.members m
 > ```
 >- JPQL의 ```DISTINCT```는 일반적인 SQL의 ```DISTINCT```명령도 수행하며, 추가적으로 애플리케이션 내에서 중복의 결과를 제거해주는 두 가지 역할을 수행한다.
+
+#### 12.4. 일반 Join과 Fetch Join의 차이
+- 일반 Join의 경우는 대상 엔티티만 조회하고 필드 엔티티는 조회해오지 않는다.
+- Fetch Join의 경우는 조회 대상 엔티티의 필드 엔티티를 함께 조회하여 영속성 컨텍스트에 올린다.
