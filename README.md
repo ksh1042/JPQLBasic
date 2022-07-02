@@ -450,10 +450,14 @@ FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 >```
 >- JPQL에 ```DISTINCT```를 추가하여 중복을 제거 가능하다.
 > ```jpaql
->   SELECT DISTINCT t FROM TEAM t JOIN t.members m
+>   SELECT DISTINCT t FROM TEAM t JOIN t.members
 > ```
 >- JPQL의 ```DISTINCT```는 일반적인 SQL의 ```DISTINCT```명령도 수행하며, 추가적으로 애플리케이션 내에서 중복의 결과를 제거해주는 두 가지 역할을 수행한다.
 
 #### 12.4. 일반 Join과 Fetch Join의 차이
 - 일반 Join의 경우는 대상 엔티티만 조회하고 필드 엔티티는 조회해오지 않는다.
 - Fetch Join의 경우는 조회 대상 엔티티의 필드 엔티티를 함께 조회하여 영속성 컨텍스트에 올린다.
+- Fetch Join은 별칭을 주어 그래프 탐색을 실행할 경우 좋지 않은 결과를 가져올 수 있다.
+```jpaql
+SELECT m FROM Member as m JOIN FETCH m.team as t WHERE t.name = 'Back-End 01'
+```
