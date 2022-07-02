@@ -457,7 +457,15 @@ FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 #### 12.4. 일반 Join과 Fetch Join의 차이
 - 일반 Join의 경우는 대상 엔티티만 조회하고 필드 엔티티는 조회해오지 않는다.
 - Fetch Join의 경우는 조회 대상 엔티티의 필드 엔티티를 함께 조회하여 영속성 컨텍스트에 올린다.
+
+
+#### 12.5. Fetch Join 사용 시 주의점
 - Fetch Join은 별칭을 주어 그래프 탐색을 실행할 경우 좋지 않은 결과를 가져올 수 있다.
 ```jpaql
 SELECT t FROM Team as t JOIN FETCH t.members as m WHERE m.age > 10
 ```
+- N:1 관계는 문제가 없으나, 1:N 관계에서 세 개 이상의 컬렉션을 Fetch Join 할 경우 데이터 정합성에 문제가 생길 수가 있다.
+> 두 개의 컬렉션을 패치 조인 할 경우에도 N+1 문제가 발생하는데 그 이상의 경우 N x M x ...+1 문제가 발생할 수 있기 때문
+- 컬렉션 Fetch Join을 실행하면 페이징 API 사용이 불가능하다. (Hibernate의 경우는 경고메세지를 출력하고 앱 메모리 내에서 페이징 연산을 수행한다)
+>- setFirstResult
+>- setMaxResult 
