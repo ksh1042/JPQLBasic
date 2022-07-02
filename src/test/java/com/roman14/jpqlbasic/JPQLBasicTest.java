@@ -77,15 +77,6 @@ class JPQLBasicTest
     final String query = "SELECT DISTINCT t FROM Team t JOIN t.members m";
     final List<Team> teams = subject.clearAndQuery(query, Team.class);
 
-    for(Team t : teams)
-    {
-      System.out.println("t.getMembers().get(0).getClass() = " + t.getMembers().get(0).getClass());
-    }
-
-    for(Team t : teams)
-    {
-      System.out.println(t.getName() + " = " + t.getMembers().size());
-    }
 
 //    for(Member m : members)
 //    {

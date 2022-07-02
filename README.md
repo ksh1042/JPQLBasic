@@ -469,3 +469,90 @@ SELECT t FROM Team as t JOIN FETCH t.members as m WHERE m.age > 10
 - 컬렉션 Fetch Join을 실행하면 페이징 API 사용이 불가능하다. (Hibernate의 경우는 경고메세지를 출력하고 앱 메모리 내에서 페이징 연산을 수행한다)
 >- setFirstResult
 >- setMaxResult 
+
+#### 12.6. @BatchSize
+- N:1 관계에서 N+1 문제를 해결하기 위해 사용되는 차선책이다.
+- Fetch Join 실행 시 ```WHERE IN``` 조건을 생성하여 한 번에 조회해온다.
+- 보통 1~1000 값을 준다. 
+```java
+public class Team {
+  @BatchSize(size = 100)
+  @OneToMany
+  private List<Member> members = new ArrayList<>();
+}
+```
+- persistence.xml을 통해 글로벌 설정으로 사용이 가능하다.
+```xml
+<properties>
+  ...
+  <property name="hibernate.default_batch_fetch_size" value="100" />
+</properties>
+```
+
+### 13. 다형성 쿼리
+#### 13.1. TYPE
+- ```type``` 키워드를 통해 특정 서브클래스 엔티티만 조회가 가능하다.
+- 해당 슈퍼클래스 엔티티에 ```@DiscriminatorColumn```를 명시하여 구분자를 추가해야 사용 가능하다.
+```jpaql
+/* JPQL */
+SELECT m FROM Member as m WHERE TYPE(m) NOT IN (Admin, Regular)  
+```
+```sql
+/* SQL */
+SELECT m.* FROM TB_MEMBER as m WHERE m.DTYPE IN ('A', 'R')
+```
+
+#### 13.2. TREAT
+- 자바의 타입캐스팅과 유사. 슈퍼클래스 엔티티에서 서브클래스 엔티티로 캐스팅이 필요할 경우에 사용된다.
+- SELECT, FROM, WHERE 에서 사용이 가능하다.
+```jpaql
+/* 트랙 수가 5개를 넘는 앨범을 아이템으로 조회 */
+SELECT i FROM Item as i WHERE TREAT(i as Album).totalTrack > 5
+```
+
+### 14. Named
+- 자주 사용하는 쿼리를 어노테이션을 통해 별도의 이름으로 등록이 가능하다.
+```java
+@Entity
+@NamedQuery(name = "Member.findById", query = "SELECT m FROM Member as m WHERE m.userName = :userName")
+public class Member {}
+```
+```java
+em.createNamedQuery("Member.findById", Member.class)
+  .setParameter("userName", "문동훈")
+  .getResultList();
+```
+- 어플리케이션 실행 중 해당 쿼리의 검증을 마치므로 런타임중 문법오류가 발생하지 않는다.
+- xml을 통해 매핑도 가능하다.
+```xml
+<persistence-unit name = "JpaBasic">
+  <mapping-file>META-INF/named/Member.xml</mapping-file>
+  <properties>
+    ...
+  </properties>
+</persistence-unit>
+```
+```xml
+<entity-mappings xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm" version="2.2">
+  <named-query name="Member.findByName">
+    <![CDATA[
+        SELECT m
+        FROM Member as m 
+        WHERE m.userName = :userName
+    ]]>
+  </named-query>
+</entity-mappings>
+```
+- Spring JPA Repository 인터페이스의 ```@Query```는 해당 기능을 이용해 구현되어있다.
+```java
+public interface MemberRepository extends JpaReopsotiry<Member, Long> {
+  /**
+   * 사용자 이름과 나이를 통해 사용자들을 조회한다.
+   * @param name  사용자 이름
+   * @param age   사용자 나이
+   * @return
+   */
+  @Query("SELECT m FROM Member as m WHERE m.name = ?1 AND m.age = ?2")
+  private List<Member> findByNameAndAge(String name, int age);
+}
+```
