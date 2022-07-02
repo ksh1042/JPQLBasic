@@ -459,5 +459,5 @@ FROM MEMBER m INNER JOIN TEAM t ON m.team_id = t.id
 - Fetch Join의 경우는 조회 대상 엔티티의 필드 엔티티를 함께 조회하여 영속성 컨텍스트에 올린다.
 - Fetch Join은 별칭을 주어 그래프 탐색을 실행할 경우 좋지 않은 결과를 가져올 수 있다.
 ```jpaql
-SELECT m FROM Member as m JOIN FETCH m.team as t WHERE t.name = 'Back-End 01'
+SELECT t FROM Team as t JOIN FETCH t.members as m WHERE m.age > 10
 ```
