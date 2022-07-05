@@ -23,6 +23,7 @@
 12. [Fetch](#12-Fetch)
 13. [다형성 쿼리](#13-다형성-쿼리)
 14. [Named](#14-Named)
+15. [벌크 연산](#17-벌크-연산)
 
 ### 1. JPQL 기초 문법
 
@@ -558,3 +559,20 @@ public interface MemberRepository extends JpaReopsotiry<Member, Long> {
   private List<Member> findByNameAndAge(String name, int age);
 }
 ```
+
+### 15. 벌크 연산
+- JPA는 기본적으로 실시간, 객체 단위를 중시하여 대규모 트랜잭션에는 취약하다.
+- 모든 회원의 구독 기간을 한 달 추가하고자 할 때에 현재 회원의 숫자 만큼 N번의 UPDATE 쿼리가 발생할 수도 있다. 
+- 대량의 UPDATE, DELETE 동작을 수행할때 사용하는 것 (전체 직원의 연봉 10% 인상 같은 쿼리 등)
+- 일반적인 SQL의 업데이트문과 같이 별도로 정의하여 실행한다.
+```java
+// 실행되어 업데이트 된 행의 수를 반환 
+int resultCnt = em.createQuery("UPDATE Employee as e SET e.salary = e.salary +  e.salary * 0.1 WHERE e.level = :level ")
+  .setParameter("level", employeeLevel)
+  .executeUpdate();
+em.clear(); // ,영속성
+```
+- Hibernate를 사용할 경우 ```INSERT INTO ... SELECT```와 같은 SELECT INSERT도 지원한다.
+> 영속성 컨텍스트에서 관리되는 수행 단위가 아니므로, 주의해서 사용하여야 한다. 기본적인 해결방법은 아래와 같다.
+> 1. 벌크 연산을 먼저 수행하여 영속성 컨텍스트와의 불일치성을 사전에 막는다.
+> 2. 벌크 연산 후 계속하여 해당 엔티티를 영속성 컨테스트에서 관리하고자 하면 flaush, clear 동작을 수행하여 수정된 엔티티를 새로 조회해 불일치성을 막아야 한다.
